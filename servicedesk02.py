@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
+import os
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -9,32 +11,25 @@ st.set_page_config(
     layout="wide"
 )
 
-# Inicialización de la base de datos en estado de sesión (Session State)
+# Archivo local para persistencia de datos
+DATA_FILE = "tickets.json"
+
+def cargar_tickets():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def guardar_tickets(tickets):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(tickets, f, ensure_ascii=False, indent=4)
+
+# Inicialización de la base de datos (Sin ejemplos previos, inicia vacía)
 if "tickets" not in st.session_state:
-    st.session_state.tickets = [
-        {
-            "ID": "INC-1001",
-            "Fecha": "2026-10-10 10:15",
-            "Cliente": "Carlos Mendoza",
-            "Area": "Contabilidad",
-            "Categoria": "Hardware",
-            "Prioridad": "Alta",
-            "Estado": "En Proceso",
-            "Asunto": "Impresora de boletas no responde",
-            "Descripcion": "La impresora no enciende ni responde al puerto USB."
-        },
-        {
-            "ID": "INC-1002",
-            "Fecha": "2026-10-10 11:30",
-            "Cliente": "Ana Flores",
-            "Area": "Ventas",
-            "Categoria": "Software",
-            "Prioridad": "Media",
-            "Estado": "Abierto",
-            "Asunto": "Error al ingresar al sistema de facturación",
-            "Descripcion": "Muestra credenciales inválidas al intentar ingresar."
-        }
-    ]
+    st.session_state.tickets = cargar_tickets()
 
 # Título de la Aplicación
 st.title("🛠️ Sistema de Gestión de Tickets - Service Desk")
@@ -58,9 +53,15 @@ if menu == "📊 Panel General":
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total Tickets", len(df))
-    col2.metric("Abiertos", len(df[df["Estado"] == "Abierto"]))
-    col3.metric("En Proceso", len(df[df["Estado"] == "En Proceso"]))
-    col4.metric("Resueltos", len(df[df["Estado"] == "Resuelto"]))
+    
+    if not df.empty:
+        col2.metric("Abiertos", len(df[df["Estado"] == "Abierto"]))
+        col3.metric("En Proceso", len(df[df["Estado"] == "En Proceso"]))
+        col4.metric("Resueltos", len(df[df["Estado"] == "Resuelto"]))
+    else:
+        col2.metric("Abiertos", 0)
+        col3.metric("En Proceso", 0)
+        col4.metric("Resueltos", 0)
 
     st.divider()
     st.subheader("📋 Lista de Incidentes Registrados")
@@ -75,7 +76,7 @@ if menu == "📊 Panel General":
 
         st.dataframe(df_display, use_container_width=True)
     else:
-        st.info("No hay tickets registrados actualmente.")
+        st.info("No hay tickets registrados actualmente. Comienza registrando uno en el módulo lateral.")
 
 # ---------------------------------------------------------
 # MÓDULO 2: REGISTRAR TICKET
@@ -101,7 +102,9 @@ elif menu == "➕ Registrar Ticket":
 
         if btn_guardar:
             if cliente and asunto:
-                nuevo_id = f"INC-{1001 + len(st.session_state.tickets)}"
+                # Generar ID correlativo basado en los existentes
+                next_id = 1001 + len(st.session_state.tickets)
+                nuevo_id = f"INC-{next_id}"
                 fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
 
                 nuevo_ticket = {
@@ -117,7 +120,8 @@ elif menu == "➕ Registrar Ticket":
                 }
 
                 st.session_state.tickets.append(nuevo_ticket)
-                st.success(f"✅ Ticket **{nuevo_id}** registrado con éxito.")
+                guardar_tickets(st.session_state.tickets) # Guardar en archivo persistente
+                st.success(f"✅ Ticket **{nuevo_id}** registrado y guardado con éxito.")
             else:
                 st.error("⚠️ Por favor completa los campos requeridos (Cliente y Asunto).")
 
@@ -138,15 +142,19 @@ elif menu == "🎟️ Consulta y Ticket Digital":
 
         with col_left:
             st.markdown("### 📋 Cambiar Estado")
-            nuevo_estado = st.selectbox("Actualizar Estado", ["Abierto", "En Proceso", "Resuelto", "Cerrado"], index=["Abierto", "En Proceso", "Resuelto", "Cerrado"].index(ticket["Estado"]))
+            estados_disponibles = ["Abierto", "En Proceso", "Resuelto", "Cerrado"]
+            idx_actual = estados_disponibles.index(ticket["Estado"]) if ticket["Estado"] in estados_disponibles else 0
+            
+            nuevo_estado = st.selectbox("Actualizar Estado", estados_disponibles, index=idx_actual)
             if st.button("Actualizar Estado"):
                 ticket["Estado"] = nuevo_estado
-                st.success("Estado actualizado correctamente.")
+                guardar_tickets(st.session_state.tickets) # Guardar cambios en persistencia
+                st.success("Estado actualizado y guardado correctamente.")
 
         with col_right:
             st.markdown("### 🎫 Ticket Digital / Comprobante")
             
-            # Plantilla visual tipo Ticket
+            # Plantilla visual tipo Ticket compacto
             ticket_box = f"""
             ----------------------------------------
                        SERVICE DESK IT
@@ -181,4 +189,4 @@ elif menu == "🎟️ Consulta y Ticket Digital":
                 mime="text/plain"
             )
     else:
-        st.info("No hay tickets disponibles para visualizar.")
+        st.info("No hay tickets disponibles para visualizar. Registra uno nuevo en la sección correspondiente.")
