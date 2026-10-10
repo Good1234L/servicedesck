@@ -264,7 +264,7 @@ elif menu == "🔐 Panel de Administrador":
 
     password = st.text_input("Ingrese contraseña de Administrador", type="password")
 
-    if password == "admin123":
+    if password == "admin040906":
         st.success("Acceso concedido. Modo Administrador Activo.")
         
         if st.session_state.tickets:
