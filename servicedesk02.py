@@ -27,7 +27,7 @@ def guardar_tickets(tickets):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(tickets, f, ensure_ascii=False, indent=4)
 
-# Inicialización de la base de datos (Inicia completamente vacía, sin ejemplos)
+# Inicialización de la base de datos (Inicia completamente vacía, sin ejemplos inventados)
 if "tickets" not in st.session_state:
     st.session_state.tickets = cargar_tickets()
 
@@ -79,10 +79,48 @@ if menu == "📊 Panel General":
         st.info("No hay tickets registrados actualmente. El sistema se encuentra vacío.")
 
 # ---------------------------------------------------------
-# MÓDULO 2: REGISTRAR TICKET
+# MÓDULO 2: REGISTRAR TICKET (Con catálogo oficial de incidencias)
 # ---------------------------------------------------------
 elif menu == "➕ Registrar Ticket":
-    st.subheader("➕ Registro de Nuevo Incidente / Solicitud")
+    st.subheader("➕ Registro de Nuevo Incidente / Solicitud de Soporte")
+
+    # Diccionario oficial de incidencias basado en el documento técnico
+    catalogo_incidencias = {
+        "1. Hardware y Equipos": [
+            "Fallo de encendido (Equipo no enciende o se apaga de forma inesperada)",
+            "Periféricos dañados (Teclado, ratón, monitor, cámara web o auriculares)",
+            "Problemas de batería / cargador (No carga, descarga rápida o puerto flojo)",
+            "Daño físico (Pantalla rota, carcasa agrietada o derrame de líquidos)"
+        ],
+        "2. Software y Aplicaciones": [
+            "Error de inicio de sesión / Cierre inesperado (Se congela o muestra código de error)",
+            "Instalación o actualización (Fallo al instalar/actualizar un programa requerido)",
+            "Licencia vencida (Producto no activado o pérdida de suscripción)",
+            "Lentitud general (Consumo excesivo de CPU o memoria RAM)"
+        ],
+        "3. Conectividad y Red": [
+            "Sin conexión a internet (Pérdida total de acceso alámbrico o Wi-Fi)",
+            "Problemas con la VPN (Error al autenticar o conectar red privada virtual)",
+            "Corte en la red local (Imposibilidad de acceder a carpetas compartidas/impresoras)",
+            "Intermitencia (Caídas constantes de señal o velocidad muy baja)"
+        ],
+        "4. Accesos y Cuentas (Identidad)": [
+            "Bloqueo de cuenta (Usuario bloqueado por intentos fallidos de contraseña)",
+            "Restablecimiento de clave (Solicitud de cambio o blanqueo de contraseña)",
+            "Altas y bajas de usuario (Creación de cuenta, permisos o desactivación)",
+            "Error de permisos (Denegación de acceso a carpeta, sistema o recurso)"
+        ],
+        "5. Telefonía y Comunicaciones": [
+            "Fallo en teléfono IP / Anexo (Sin tono, llamadas que no entran o salen)",
+            "Problemas de videoconferencia (Fallos de audio/video en Zoom, Teams, Meet)",
+            "Correo electrónico (No recibe/envía correos o problemas en Outlook/Webmail)"
+        ],
+        "6. Impresión y Escaneo": [
+            "Atasco de papel (Papel trabado en bandeja o fusor)",
+            "Falta de consumibles (Nivel bajo o agotamiento de tóner, cartuchos o rodillos)",
+            "Cola de impresión bloqueada (Trabajos acumulados que no se envían)"
+        ]
+    }
 
     with st.form("form_ticket", clear_on_submit=True):
         col_a, col_b = st.columns(2)
@@ -90,18 +128,22 @@ elif menu == "➕ Registrar Ticket":
         with col_a:
             cliente = st.text_input("Nombre del Cliente / Usuario", placeholder="Ej. Juan Pérez")
             area = st.selectbox("Área / Departamento", ["Sistemas", "Contabilidad", "Ventas", "Recursos Humanos", "Logística"])
-            categoria = st.selectbox("Categoría del Problema", ["Hardware", "Software", "Redes / Conectividad", "Accesos / Permisos"])
-
+            
+            # Selección de Categoría y Tipo de Incidencia basados en el PDF
+            categoria = st.selectbox("Categoría de Soporte", list(catalogo_incidencias.keys()))
+            
         with col_b:
             prioridad = st.selectbox("Prioridad (Impacto/Urgencia)", ["Baja", "Media", "Alta", "Crítica"])
-            asunto = st.text_input("Asunto Resumido", placeholder="Ej. Falla de red en laptop")
-
-        descripcion = st.text_area("Descripción detallada del incidente", placeholder="Detalla los síntomas y código de error...")
+            
+            # Sub-opción dinámica según la categoría seleccionada
+            asunto_tipo = st.selectbox("Tipo de Incidencia Específica", catalogo_incidencias[categoria])
+            
+        descripcion = st.text_area("Descripción detallada del incidente o síntomas", placeholder="Agrega códigos de error, número de anexo, observaciones...")
 
         btn_guardar = st.form_submit_button("💾 Generar y Guardar Ticket")
 
         if btn_guardar:
-            if cliente and asunto:
+            if cliente:
                 next_id = 1001 + len(st.session_state.tickets)
                 nuevo_id = f"INC-{next_id}"
                 fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -111,10 +153,10 @@ elif menu == "➕ Registrar Ticket":
                     "Fecha": fecha_actual,
                     "Cliente": cliente,
                     "Area": area,
-                    "Categoria": categoria,
+                    "Categoria": categoria.split(". ")[1], # Extrae texto limpio
+                    "Asunto": asunto_tipo,
                     "Prioridad": prioridad,
                     "Estado": "Abierto",
-                    "Asunto": asunto,
                     "Descripcion": descripcion
                 }
 
@@ -122,7 +164,7 @@ elif menu == "➕ Registrar Ticket":
                 guardar_tickets(st.session_state.tickets)
                 st.success(f"✅ Ticket **{nuevo_id}** registrado y guardado con éxito.")
             else:
-                st.error("⚠️ Por favor completa los campos requeridos (Cliente y Asunto).")
+                st.error("⚠️ Por favor completa el nombre del cliente o usuario solicitante.")
 
 # ---------------------------------------------------------
 # MÓDULO 3: CONSULTA Y TICKET DIGITAL (IMPRIMIBLE)
@@ -166,10 +208,10 @@ elif menu == "🎟️ Consulta y Ticket Digital":
             Prioridad  : {ticket['Prioridad']}
             Estado     : {ticket['Estado']}
             ----------------------------------------
-            Asunto:
+            Incidencia:
             {ticket['Asunto']}
 
-            Detalle:
+            Detalle Adicional:
             {ticket['Descripcion']}
             ----------------------------------------
                Gracias por contactar al soporte.
@@ -188,17 +230,16 @@ elif menu == "🎟️ Consulta y Ticket Digital":
         st.info("No hay tickets disponibles. El sistema está vacío.")
 
 # ---------------------------------------------------------
-# MÓDULO 4: PANEL DE ADMINISTRADOR (EXclusivo para ti)
+# MÓDULO 4: PANEL DE ADMINISTRADOR (Exclusivo para ti)
 # ---------------------------------------------------------
 elif menu == "🔐 Panel de Administrador":
     st.subheader("🔐 Panel de Control Exclusivo - Administrador")
     st.markdown("Acceso restringido para la edición avanzada o eliminación de registros.")
 
-    # Control de contraseña (puedes cambiar "admin123" por la clave que prefieras)
     password = st.text_input("Ingrese contraseña de Administrador", type="password")
 
-    if password == "admin040906":
-        st.success("Accesso concedido. Modo Administrador Activo.")
+    if password == "admin123":
+        st.success("Acceso concedido. Modo Administrador Activo.")
         
         if st.session_state.tickets:
             st.divider()
@@ -211,7 +252,7 @@ elif menu == "🔐 Panel de Administrador":
 
             with st.form("form_admin_edit"):
                 nuevo_cliente = st.text_input("Cliente", value=t_edit["Cliente"])
-                nuevo_asunto = st.text_input("Asunto", value=t_edit["Asunto"])
+                nuevo_asunto = st.text_input("Asunto / Incidencia", value=t_edit["Asunto"])
                 nueva_desc = st.text_area("Descripción", value=t_edit["Descripcion"])
                 nuevo_est = st.selectbox("Estado", ["Abierto", "En Proceso", "Resuelto", "Cerrado"], index=["Abierto", "En Proceso", "Resuelto", "Cerrado"].index(t_edit["Estado"]))
                 nueva_prio = st.selectbox("Prioridad", ["Baja", "Media", "Alta", "Crítica"], index=["Baja", "Media", "Alta", "Crítica"].index(t_edit["Prioridad"]))
