@@ -197,7 +197,7 @@ elif menu == "🔐 Panel de Administrador":
     # Control de contraseña (puedes cambiar "admin123" por la clave que prefieras)
     password = st.text_input("Ingrese contraseña de Administrador", type="password")
 
-    if password == "admin123":
+    if password == "admin040906":
         st.success("Accesso concedido. Modo Administrador Activo.")
         
         if st.session_state.tickets:
