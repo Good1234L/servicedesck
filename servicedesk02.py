@@ -27,7 +27,7 @@ def guardar_tickets(tickets):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(tickets, f, ensure_ascii=False, indent=4)
 
-# Inicialización de la base de datos (Sin ejemplos previos, inicia vacía)
+# Inicialización de la base de datos (Inicia completamente vacía, sin ejemplos)
 if "tickets" not in st.session_state:
     st.session_state.tickets = cargar_tickets()
 
@@ -37,10 +37,10 @@ st.markdown("Plataforma de atención de incidentes ITIL v4 y seguimiento de SLAs
 
 st.divider()
 
-# Menú lateral para navegación
+# Menú lateral para navegación (Incluye el panel de Administrador protegido)
 menu = st.sidebar.radio(
     "Navegación / Módulos",
-    ["📊 Panel General", "➕ Registrar Ticket", "🎟️ Consulta y Ticket Digital"]
+    ["📊 Panel General", "➕ Registrar Ticket", "🎟️ Consulta y Ticket Digital", "🔐 Panel de Administrador"]
 )
 
 # ---------------------------------------------------------
@@ -76,7 +76,7 @@ if menu == "📊 Panel General":
 
         st.dataframe(df_display, use_container_width=True)
     else:
-        st.info("No hay tickets registrados actualmente. Comienza registrando uno en el módulo lateral.")
+        st.info("No hay tickets registrados actualmente. El sistema se encuentra vacío.")
 
 # ---------------------------------------------------------
 # MÓDULO 2: REGISTRAR TICKET
@@ -102,7 +102,6 @@ elif menu == "➕ Registrar Ticket":
 
         if btn_guardar:
             if cliente and asunto:
-                # Generar ID correlativo basado en los existentes
                 next_id = 1001 + len(st.session_state.tickets)
                 nuevo_id = f"INC-{next_id}"
                 fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -120,7 +119,7 @@ elif menu == "➕ Registrar Ticket":
                 }
 
                 st.session_state.tickets.append(nuevo_ticket)
-                guardar_tickets(st.session_state.tickets) # Guardar en archivo persistente
+                guardar_tickets(st.session_state.tickets)
                 st.success(f"✅ Ticket **{nuevo_id}** registrado y guardado con éxito.")
             else:
                 st.error("⚠️ Por favor completa los campos requeridos (Cliente y Asunto).")
@@ -135,26 +134,24 @@ elif menu == "🎟️ Consulta y Ticket Digital":
         lista_ids = [t["ID"] for t in st.session_state.tickets]
         ticket_sel_id = st.selectbox("Seleccione el ID del Ticket", lista_ids)
 
-        # Buscar el ticket seleccionado
         ticket = next(t for t in st.session_state.tickets if t["ID"] == ticket_sel_id)
 
         col_left, col_right = st.columns([1, 1])
 
         with col_left:
-            st.markdown("### 📋 Cambiar Estado")
+            st.markdown("### 📋 Cambiar Estado Rápido")
             estados_disponibles = ["Abierto", "En Proceso", "Resuelto", "Cerrado"]
             idx_actual = estados_disponibles.index(ticket["Estado"]) if ticket["Estado"] in estados_disponibles else 0
             
             nuevo_estado = st.selectbox("Actualizar Estado", estados_disponibles, index=idx_actual)
             if st.button("Actualizar Estado"):
                 ticket["Estado"] = nuevo_estado
-                guardar_tickets(st.session_state.tickets) # Guardar cambios en persistencia
-                st.success("Estado actualizado y guardado correctamente.")
+                guardar_tickets(st.session_state.tickets)
+                st.success("Estado actualizado correctamente.")
 
         with col_right:
             st.markdown("### 🎫 Ticket Digital / Comprobante")
             
-            # Plantilla visual tipo Ticket compacto
             ticket_box = f"""
             ----------------------------------------
                        SERVICE DESK IT
@@ -181,7 +178,6 @@ elif menu == "🎟️ Consulta y Ticket Digital":
 
             st.code(ticket_box, language="text")
 
-            # Botón para descargar ticket en archivo TXT
             st.download_button(
                 label="📥 Descargar Ticket (TXT)",
                 data=ticket_box,
@@ -189,4 +185,59 @@ elif menu == "🎟️ Consulta y Ticket Digital":
                 mime="text/plain"
             )
     else:
-        st.info("No hay tickets disponibles para visualizar. Registra uno nuevo en la sección correspondiente.")
+        st.info("No hay tickets disponibles. El sistema está vacío.")
+
+# ---------------------------------------------------------
+# MÓDULO 4: PANEL DE ADMINISTRADOR (EXclusivo para ti)
+# ---------------------------------------------------------
+elif menu == "🔐 Panel de Administrador":
+    st.subheader("🔐 Panel de Control Exclusivo - Administrador")
+    st.markdown("Acceso restringido para la edición avanzada o eliminación de registros.")
+
+    # Control de contraseña (puedes cambiar "admin123" por la clave que prefieras)
+    password = st.text_input("Ingrese contraseña de Administrador", type="password")
+
+    if password == "admin123":
+        st.success("Accesso concedido. Modo Administrador Activo.")
+        
+        if st.session_state.tickets:
+            st.divider()
+            st.markdown("### 🛠️ Gestión y Edición de Tickets")
+
+            lista_ids = [t["ID"] for t in st.session_state.tickets]
+            id_a_editar = st.selectbox("Seleccione Ticket a Administrar", lista_ids)
+
+            t_edit = next(t for t in st.session_state.tickets if t["ID"] == id_a_editar)
+
+            with st.form("form_admin_edit"):
+                nuevo_cliente = st.text_input("Cliente", value=t_edit["Cliente"])
+                nuevo_asunto = st.text_input("Asunto", value=t_edit["Asunto"])
+                nueva_desc = st.text_area("Descripción", value=t_edit["Descripcion"])
+                nuevo_est = st.selectbox("Estado", ["Abierto", "En Proceso", "Resuelto", "Cerrado"], index=["Abierto", "En Proceso", "Resuelto", "Cerrado"].index(t_edit["Estado"]))
+                nueva_prio = st.selectbox("Prioridad", ["Baja", "Media", "Alta", "Crítica"], index=["Baja", "Media", "Alta", "Crítica"].index(t_edit["Prioridad"]))
+
+                guardar_cambios = st.form_submit_button("💾 Guardar Cambios")
+
+                if guardar_cambios:
+                    t_edit["Cliente"] = nuevo_cliente
+                    t_edit["Asunto"] = nuevo_asunto
+                    t_edit["Descripcion"] = nueva_desc
+                    t_edit["Estado"] = nuevo_est
+                    t_edit["Prioridad"] = nueva_prio
+                    guardar_tickets(st.session_state.tickets)
+                    st.success(f"Ticket {id_a_editar} modificado con éxito.")
+
+            st.divider()
+            st.markdown("### ⚠️ Zona de Peligro")
+            if st.button("🗑️ Eliminar este Ticket"):
+                st.session_state.tickets = [t for t in st.session_state.tickets if t["ID"] != id_a_editar]
+                guardar_tickets(st.session_state.tickets)
+                st.warning(f"El ticket {id_a_editar} ha sido eliminado permanentemente.")
+                st.rerun()
+        else:
+            st.info("No hay tickets registrados en el sistema para administrar.")
+            
+    elif password != "":
+        st.error("❌ Contraseña incorrecta.")
+    else:
+        st.info("💡 Ingresa tu contraseña de administrador para desbloquear las opciones de edición y control.")
