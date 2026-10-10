@@ -175,6 +175,9 @@ if "tickets" not in st.session_state:
     else:
         st.session_state.tickets = tickets_cargados
 
+if "es_admin" not in st.session_state:
+    st.session_state.es_admin = False
+
 # Título de la Aplicación
 st.title("🛠️ Sistema de Gestión de Tickets - Service Desk")
 st.markdown("Plataforma de atención de incidentes ITIL v4 y seguimiento de SLAs.")
@@ -227,6 +230,9 @@ if menu == "📊 Panel General":
 elif menu == "➕ Registrar Ticket":
     st.subheader("➕ Registro de Nuevo Incidente / Solicitud")
 
+    if not st.session_state.es_admin:
+        st.warning("Solo un administrador puede registrar nuevos tickets. Accede desde el Panel de Administrador.")
+
     with st.form("form_ticket", clear_on_submit=True):
         col_a, col_b = st.columns(2)
 
@@ -244,10 +250,15 @@ elif menu == "➕ Registrar Ticket":
 
         descripcion = st.text_area("Descripción detallada del incidente", placeholder="Detalla los síntomas y código de error...")
 
-        btn_guardar = st.form_submit_button("💾 Generar y Guardar Ticket")
+        btn_guardar = st.form_submit_button(
+            "💾 Generar y Guardar Ticket",
+            disabled=not st.session_state.es_admin
+        )
 
         if btn_guardar:
-            if cliente and asunto:
+            if not st.session_state.es_admin:
+                st.error("Solo un administrador puede registrar nuevos tickets.")
+            elif cliente and asunto:
                 next_id = 1001 + len(st.session_state.tickets)
                 nuevo_id = f"INC-{next_id}"
                 fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -365,10 +376,17 @@ elif menu == "🔐 Panel de Administrador":
     st.subheader("🔐 Panel de Control Exclusivo - Administrador")
     st.markdown("Acceso restringido para la edición avanzada o eliminación de registros.")
 
-    password = st.text_input("Ingrese contraseña de Administrador", type="password")
+    password = ""
+    if not st.session_state.es_admin:
+        password = st.text_input("Ingrese contraseña de Administrador", type="password")
+        if password == "admin040906":
+            st.session_state.es_admin = True
 
-    if password == "admin040906":
+    if st.session_state.es_admin:
         st.success("Acceso concedido. Modo Administrador Activo.")
+        if st.button("Cerrar sesión de administrador"):
+            st.session_state.es_admin = False
+            st.rerun()
         
         if st.session_state.tickets:
             st.divider()
