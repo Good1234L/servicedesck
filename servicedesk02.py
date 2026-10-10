@@ -31,67 +31,66 @@ def guardar_tickets(tickets):
 if "tickets" not in st.session_state:
     tickets_cargados = cargar_tickets()
     if not tickets_cargados:
-        # Incidencias oficiales extraídas del documento PDF de soporte técnico
         st.session_state.tickets = [
             {
                 "ID": "INC-1001", "Fecha": "2026-10-10 08:00", "Cliente": "Mario Gómez", "Area": "Sistemas",
                 "Categoria": "Hardware y Equipos", "Asunto": "Fallo de encendido", "Prioridad": "Alta", "Estado": "Abierto",
-                "Descripcion": "Equipo no enciende o se apaga de forma inesperada[cite: 12]."
+                "Descripcion": "Equipo no enciende o se apaga de forma inesperada."
             },
             {
                 "ID": "INC-1002", "Fecha": "2026-10-10 08:30", "Cliente": "Lucía Torres", "Area": "Administración",
                 "Categoria": "Hardware y Equipos", "Asunto": "Periféricos dañados", "Prioridad": "Media", "Estado": "En Proceso",
-                "Descripcion": "Problemas con teclado, ratón, monitor, cámara web o auriculares[cite: 12]."
+                "Descripcion": "Problemas con teclado, ratón, monitor, cámara web o auriculares."
             },
             {
                 "ID": "INC-1003", "Fecha": "2026-10-10 09:00", "Cliente": "Carlos Ruiz", "Area": "Ventas",
                 "Categoria": "Hardware y Equipos", "Asunto": "Problemas de batería / cargador", "Prioridad": "Media", "Estado": "Abierto",
-                "Descripcion": "Batería no carga, descarga muy rápida o puerto de corriente flojo[cite: 12]."
+                "Descripcion": "Batería no carga, descarga muy rápida o puerto de corriente flojo."
             },
             {
                 "ID": "INC-1004", "Fecha": "2026-10-10 09:30", "Cliente": "Ana Mendoza", "Area": "Gerencia",
                 "Categoria": "Hardware y Equipos", "Asunto": "Daño físico", "Prioridad": "Crítica", "Estado": "Abierto",
-                "Descripcion": "Pantalla rota, carcasa agrietada o derrame de líquidos[cite: 12]."
+                "Descripcion": "Pantalla rota, carcasa agrietada o derrame de líquidos."
             },
             {
                 "ID": "INC-1005", "Fecha": "2026-10-10 10:00", "Cliente": "Jorge Quispe", "Area": "Contabilidad",
                 "Categoria": "Software y Aplicaciones", "Asunto": "Error de inicio de sesión", "Prioridad": "Alta", "Estado": "En Proceso",
-                "Descripcion": "Aplicación que se cierra sola, se congela o muestra código de error[cite: 12]."
+                "Descripcion": "Aplicación que se cierra sola, se congela o muestra código de error."
             },
             {
                 "ID": "INC-1006", "Fecha": "2026-10-10 10:15", "Cliente": "Elena Ramos", "Area": "Logística",
                 "Categoria": "Software y Aplicaciones", "Asunto": "Lentitud general", "Prioridad": "Baja", "Estado": "Resuelto",
-                "Descripcion": "Consumo excesivo de CPU o memoria RAM por parte de un programa[cite: 12]."
+                "Descripcion": "Consumo excesivo de CPU o memoria RAM por parte de un programa."
             },
             {
                 "ID": "INC-1007", "Fecha": "2026-10-10 10:40", "Cliente": "Pedro Infantes", "Area": "Sistemas",
                 "Categoria": "Conectividad y Red", "Asunto": "Sin conexión a internet", "Prioridad": "Crítica", "Estado": "Abierto",
-                "Descripcion": "Pérdida total de acceso a la red (alámbrica o Wi-Fi)[cite: 12]."
+                "Descripcion": "Pérdida total de acceso a la red (alámbrica o Wi-Fi)."
             },
             {
                 "ID": "INC-1008", "Fecha": "2026-10-10 11:00", "Cliente": "Rosaura Limachi", "Area": "Finanzas",
                 "Categoria": "Conectividad y Red", "Asunto": "Problemas con la VPN", "Prioridad": "Alta", "Estado": "En Proceso",
-                "Descripcion": "Error al autenticar o conectar la red privada virtual para trabajo remoto[cite: 12]."
+                "Descripcion": "Error al autenticar o conectar la red privada virtual para trabajo remoto."
             },
             {
                 "ID": "INC-1009", "Fecha": "2026-10-10 11:25", "Cliente": "David Mamani", "Area": "Recursos Humanos",
                 "Categoria": "Accesos y Cuentas", "Asunto": "Bloqueo de cuenta", "Prioridad": "Media", "Estado": "Resuelto",
-                "Descripcion": "Usuario bloqueado por intentos fallidos de contraseña[cite: 13]."
+                "Descripcion": "Usuario bloqueado por intentos fallidos de contraseña."
             },
             {
                 "ID": "INC-1010", "Fecha": "2026-10-10 11:50", "Cliente": "Sofía Cárdenas", "Area": "Legal",
                 "Categoria": "Accesos y Cuentas", "Asunto": "Restablecimiento de clave", "Prioridad": "Baja", "Estado": "Cerrado",
-                "Descripcion": "Solicitud de cambio o blanqueo de contraseña[cite: 13]."
+                "Descripcion": "Solicitud de cambio o blanqueo de contraseña."
             },
             {
                 "ID": "INC-1011", "Fecha": "2026-10-10 12:10", "Cliente": "Raúl Benavides", "Area": "Operaciones",
                 "Categoria": "Telefonía y Comunicaciones", "Asunto": "Fallo en el teléfono IP / Anexo", "Prioridad": "Media", "Estado": "Abierto",
-                "Descripcion": "Sin tono, llamadas que no entran o no salen[cite: 13]."
+                "Descripcion": "Sin tono, llamadas que no entran o no salen."
             },
             {
                 "ID": "INC-1012", "Fecha": "2026-10-10 12:40", "Cliente": "Carmen Salas", "Area": "Marketing",
                 "Categoria": "Impresión y Escaneo", "Asunto": "Atasco de papel", "Prioridad": "Baja", "Estado": "Resuelto",
-                "Descripcion": "Papel trabado en la bandeja o fusor[cite: 13]."
+                "Descripcion": "Papel trabado en la bandeja o fusor."
             }
         ]
         guardar_tickets(st.session_state.tickets)
